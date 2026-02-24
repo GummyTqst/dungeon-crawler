@@ -108,13 +108,117 @@ switch($method) {
                 "error" => "Failed to create enchantment"
             ]);
         }
-    
+
         break;
     
-        default:
-            http_response_code(405);
-            echo json_encode(["error" => "Method not allowed"]);
-            break;
+    case "DELETE":
+        if (!$id) {
+            http_response_code(400);
+            echo json_encode(["error" => "ID is required"]);
+            exit;
+        }
+
+        // Check if weapon exists
+        $stmt = $dbh->prepare("SELECT * FROM enchantments WHERE id = ?");
+        $stmt->execute([$id]);
+
+        if (!$stmt->fetch()) {
+            http_response_code(404);
+            echo json_encode(["error" => "Enchantment not found"]);
+            exit;
+        }
+
+        // Delete armor
+        $stmt = $dbh->prepare("DELETE FROM enchantments WHERE id = ?");
+        $stmt->execute([$id]);
+
+        echo json_encode([
+            "message" => "Enchantment deleted successfully"
+        ]);
+        break;
+
+    case "PATCH":
+        if (!$id) {
+            http_response_code(400);
+            echo json_encode(["error" => "Enchantment ID is required"]);
+            exit;
+        }
+
+        $data = json_decode(file_get_contents("php://input"), true);
+
+        $stmt = $dbh->prepare("SELECT id FROM enchantments WHERE id = ?");
+        $stmt->execute([$id]);
+
+        if (!$stmt->fetch()) {
+            http_response_code(404);
+            echo json_encode(["error" => "Enchantment not found"]);
+            exit;
+        }
+
+        $fields = [];
+        $values = [];
+
+        if (isset($data['name'])) {
+            $fields[] = "name = ?";
+            $values[] = $data['name'];
+        }
+
+        if (isset($data['description'])) {
+            $fields[] = "description = ?";
+            $values[] = $data['description'];
+        }
+
+        if (isset($data['equipment_type'])) {
+            $allowedTypes = ['weapon', 'armor', 'both'];
+            if (!in_array($data['equipment_type'], $allowedTypes)) {
+                http_response_code(400);
+                echo json_encode(["error" => "Invalid equipment_type. Allowed values: weapon, armor, both"]);
+                exit;
+            }
+            $fields[] = "equipment_type = ?";
+            $values[] = $data['equipment_type'];
+        }
+
+        if (!empty($fields)) {
+            $values[] = $id;
+            $sql = "UPDATE enchantments SET " . implode(", ", $fields) . " WHERE id = ?";
+            $stmt = $dbh->prepare($sql);
+            $stmt->execute($values);
+        }
+
+        // Update tiers if provided
+        if (isset($data['tiers']) && is_array($data['tiers'])) {
+            // Delete existing tiers
+            $stmt = $dbh->prepare("DELETE FROM enchantment_tiers WHERE enchantment_id = ?");
+            $stmt->execute([$id]);
+
+            // Insert new tiers
+            foreach ($data['tiers'] as $tier) {
+                if (!isset($tier['tier_level']) || !isset($tier['value'])) {
+                    continue; // Skip invalid tier entries
+                }
+
+                if (!is_numeric($tier['tier_level'])) {
+                    http_response_code(400);
+                    echo json_encode(["error" => "Tier level must be a number"]);
+                    exit;
+                }
+
+                $stmt = $dbh->prepare("
+                    INSERT INTO enchantment_tiers (enchantment_id, tier_level, value)
+                    VALUES (?, ?, ?)
+                ");
+                $stmt->execute([$id, $tier['tier_level'], $tier['value']]);
+            }
+        }
+
+        echo json_encode(["message" => "Enchantment updated successfully"]);
+        break;
+    
+    default:
+        http_response_code(405);
+        echo json_encode(["error" => "Method not allowed"]);
+        break;
 }
 
 ?>

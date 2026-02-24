@@ -56,7 +56,7 @@ switch ($resource) {
             armor.id AS armor_id,
             armor.name AS armor_name,
             armor.rarity AS armor_rarity,
-            armor.defense
+            armor.defense,
 
             armor_properties.id AS property_id,
             armor_properties.property_name,
@@ -126,13 +126,45 @@ switch ($resource) {
                 }
                 
                 // Armor
-                if ($row['armor_id'] && !in_array($row['armor_id'], array_column($players[$player_id]['heroes'][$hero_id]['armor'], 'id'))) {
-                    $players[$player_id]['heroes'][$hero_id]['armor'][] = [
-                        "id" => $row['armor_id'],
-                        "name" => $row['armor_name'],
-                        "rarity" => $row['armor_rarity'],
-                        "defense" => $row['defense']
-                    ];
+                if ($row['armor_id']) {
+                    $armor_id = $row['armor_id'];
+
+                    $armorIndex = null;
+                    foreach ($players[$player_id]['heroes'][$hero_id]['armor'] as $index => $existingArmor) {
+                        if ($existingArmor['id'] == $armor_id) {
+                            $armorIndex = $index;
+                            break;
+                        }
+                    }
+
+                    if ($armorIndex === null) {
+                        $players[$player_id]['heroes'][$hero_id]['armor'][] = [
+                            'id' => $armor_id,
+                            'name' => $row['armor_name'],
+                            'rarity' => $row['armor_rarity'],
+                            'defense' => $row['defense'],
+                            'properties' => []
+                        ];
+                        $armorIndex = count($players[$player_id]['heroes'][$hero_id]['armor']) - 1;
+                    }
+
+                    if ($row['property_id']) {
+                        $propertyExists = false;
+                        foreach ($players[$player_id]['heroes'][$hero_id]['armor'][$armorIndex]['properties'] as $property) {
+                            if ($property['id'] == $row['property_id']) {
+                                $propertyExists = true;
+                                break;
+                            }
+                        }
+
+                        if (!$propertyExists) {
+                            $players[$player_id]['heroes'][$hero_id]['armor'][$armorIndex]['properties'][] = [
+                                'id' => $row['property_id'],
+                                'property_name' => $row['property_name'],
+                                'value' => $row['value']
+                            ];
+                        }
+                    }
                 }
             }
         }
