@@ -33,6 +33,9 @@ switch ($resource) {
     case "armor":
         require("armor.php");
         break;
+    case "enchantments":
+        require("enchantments.php");
+        break;
     case "":
         // echo json_encode(["message" => "Welcome to the Dungeon Crawler API!"]);
         $sql = "
