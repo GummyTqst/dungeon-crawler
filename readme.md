@@ -1,4 +1,4 @@
-# 🏰 Dungeon Crawler REST API
+# Dungeon Crawler REST API
 
 A mini RESTful API for minecraft dungeons (School project).  
 Manage players, Weapons, Armors and enchantments.
@@ -19,14 +19,15 @@ This API is designed for integration with web, mobile, or desktop frontends.
 
 ---
 
-## 🚀 Features
+## Features
 
-- Player creation and stat management  
-- Inventory & equipment system  
+- Player & Hero creation
+- Weapon & Armor
+- Equip Weapon & Armor
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Backend:** PhP
 - **Database:** MySQL
@@ -34,7 +35,7 @@ This API is designed for integration with web, mobile, or desktop frontends.
 
 ---
 
-## 📦 Installation
+## Installation
 
 ```bash
 git clone https://github.com/yourusername/dungeon-crawler-api.git
@@ -62,7 +63,7 @@ http://localhost:3000
 
 ---
 
-## 🧙 Players
+## Players
 
 | Method | Endpoint | Description |
 |--------|----------|------------|
@@ -160,6 +161,63 @@ http://localhost:3000
 
 ---
 
+## Enchantments
+
+| Method | Endpoint | Description |
+|--------|----------|------------|
+| GET | `/enchantments` | List all enchantments |
+| GET | `/enchantments/:id` | Get enchantment details |
+| POST | `/enchantments` | Create new enchants |
+| PATCH | `/enchantments/:id` | Update enchants |
+| DELETE | `/enchantments/:id` | Delete enchants |
+
+### Post Armor exemple
+
+```json
+{
+    "name": "Luck of the Sea",
+    "description": "Increase luck, boosting the chance of unique rare drops",
+    "equipment_type": "armor",
+    "enchantment_cost": 2,
+    "tiers": [
+        { "tier_level": 1, "value": 10 },
+        { "tier_level": 2, "value": 20 },
+        { "tier_level": 3, "value": 30 }
+    ]
+}
+```
+
+---
+
+## Equipment
+
+| Method | Endpoint | Description |
+|--------|----------|------------|
+| POST | `/equipment` | Equip Weapon & Armor to heroes |
+
+### Post Equipment exemple
+
+
+### Armor
+```json
+{
+    "action": "equip_armor",
+    "hero_id": id of hero,
+    "armor_id": id of armor
+}
+```
+
+### Weapon
+```json
+{
+    "action": "equip_weapon",
+    "hero_id": id of hero,
+    "weapon_id": id of weapon
+}
+```
+
+---
+
 ## 📊 HTTP Status Codes
 
 | Code | Meaning |
@@ -176,5 +234,4 @@ http://localhost:3000
 ## 👑 Author
 
 Tobias Neumann  
-GitHub: https://github.com/yourusername  
-Email: your@email.com  
+GitHub: https://github.com/GummyTqst
