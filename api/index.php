@@ -5,40 +5,35 @@ header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE");
 header("Access-Control-Allow-Headers: Content-Type");
 
+// Handle preflight requests
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
+
 require_once("db.php");
 
 $request_uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $base_path = "/dungeon-crawler/api/";
-
-// This removes the base_path and then TRIMS any leading/trailing slashes
 $path = trim(str_replace($base_path, "", $request_uri), "/");
-$path_parts = explode("/", $path);
+$path_parts = array_filter(explode("/", $path));
 
-$resource = $path_parts[0] ?? ""; // Should be "players"
-$id = $path_parts[1] ?? null;    // Should be "1"
+$resource = $path_parts[0] ?? "";
+$id = $path_parts[1] ?? null;
 
-switch ($resource) {
-    case "equipment":
-        require("equipment.php");
-        break;
-    case "players":
-        require("players.php");
-        break;
-    case "heroes":
-        require("heroes.php");
-        break;
-    case "weapons":
-        require("weapons.php");
-        break;
-    case "armor":
-        require("armor.php");
-        break;
-    case "enchantments":
-        require("enchantments.php");
-        break;
-    case "":
-        // echo json_encode(["message" => "Welcome to the Dungeon Crawler API!"]);
-        $sql = "
+$allowed_resources = [
+    'equipment',
+    'players',
+    'heroes',
+    'weapons',
+    'armor',
+    'enchantments'
+];
+
+// Route handler
+if (empty($resource)) {
+    // Default/welcome route - show all data
+    $sql = "
         SELECT
             players.id AS player_id,
             players.username,
@@ -169,14 +164,27 @@ switch ($resource) {
             }
         }
 
-        foreach ($players as &$player) {
-            $player['heroes'] = array_values($player['heroes']);
+    // Convert associative arrays to indexed arrays for JSON
+    foreach ($players as &$player) {
+        $player['heroes'] = array_values($player['heroes']);
+        foreach ($player['heroes'] as &$hero) {
+            $hero['weapons'] = array_values($hero['weapons']);
+            $hero['armor'] = array_values($hero['armor']);
         }
+    }
 
-        echo json_encode(array_values($players), JSON_PRETTY_PRINT);
-        break;
-    default:
-        http_response_code(404);
-        echo json_encode(["error" => "Resource not found"]);
-        break;
+    echo json_encode(array_values($players));
+    
+} elseif (in_array($resource, $allowed_resources)) {
+    $file = __DIR__ . "/{$resource}.php";
+    
+    if (file_exists($file)) {
+        require($file);
+    } else {
+        http_response_code(500);
+        echo json_encode(["error" => "Resource handler not found"]);
+    }
+} else {
+    http_response_code(404);
+    echo json_encode(["error" => "Invalid resource", "resource" => $resource]);
 }

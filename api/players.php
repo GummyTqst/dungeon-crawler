@@ -52,7 +52,7 @@ switch($method) {
             exit;
         }
     
-        // Check if hero exists
+        // Check if player exists
         $stmt = $dbh->prepare("SELECT * FROM players WHERE id = ?");
         $stmt->execute([$id]);
     

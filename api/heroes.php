@@ -89,7 +89,6 @@ switch($method) {
             exit;
         }
 
-
         // Delete hero
         $stmt = $dbh->prepare("DELETE FROM heroes WHERE id = ?");
         $stmt->execute([$id]);

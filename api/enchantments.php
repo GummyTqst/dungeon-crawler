@@ -158,16 +158,19 @@ switch($method) {
         $fields = [];
         $values = [];
 
+        // Update name field
         if (isset($data['name'])) {
             $fields[] = "name = ?";
             $values[] = $data['name'];
         }
 
+        // Update description field
         if (isset($data['description'])) {
             $fields[] = "description = ?";
             $values[] = $data['description'];
         }
 
+        // Update enchantment_type field
         if (isset($data['equipment_type'])) {
             $allowedTypes = ['weapon', 'armor', 'both'];
             if (!in_array($data['equipment_type'], $allowedTypes)) {
@@ -195,7 +198,7 @@ switch($method) {
             // Insert new tiers
             foreach ($data['tiers'] as $tier) {
                 if (!isset($tier['tier_level']) || !isset($tier['value'])) {
-                    continue; // Skip invalid tier entries
+                    continue;
                 }
 
                 if (!is_numeric($tier['tier_level'])) {
